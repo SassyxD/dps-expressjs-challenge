@@ -9,9 +9,9 @@ router.get('/:id/leaderboard', (req: Request, res: Response) => {
 		const { id } = req.params;
 
 		// Check if tournament exists
-		const tournament = db.query('SELECT * FROM tournaments WHERE id = ?', {
-			1: id,
-		});
+		const tournament = db.query('SELECT * FROM tournaments WHERE id = ?', [
+			id,
+		]);
 
 		if (!tournament || tournament.length === 0) {
 			res.status(404).json({ error: 'Tournament not found' });
@@ -21,21 +21,23 @@ router.get('/:id/leaderboard', (req: Request, res: Response) => {
 		// Get participants count
 		const participantsResult = db.query(
 			'SELECT COUNT(*) as count FROM tournament_participants WHERE tournament_id = ?',
-			{ 1: id }
+			[id],
 		);
 
-		const participantCount = (participantsResult[0] as { count: number }).count;
+		const participantCount = (participantsResult[0] as { count: number })
+			.count;
 
 		// Get total games played
 		const gamesResult = db.query(
 			'SELECT COUNT(*) as count FROM games WHERE tournament_id = ?',
-			{ 1: id }
+			[id],
 		);
 
 		const gamesPlayed = (gamesResult[0] as { count: number }).count;
 
 		// Calculate total required games (n * (n-1) / 2 for round-robin)
-		const totalRequiredGames = participantCount * (participantCount - 1) / 2;
+		const totalRequiredGames =
+			(participantCount * (participantCount - 1)) / 2;
 
 		// Determine status
 		let status: string;
@@ -64,7 +66,7 @@ router.get('/:id/leaderboard', (req: Request, res: Response) => {
 			WHERE tp.tournament_id = ?
 			GROUP BY tp.player_id, p.name, tp.points
 			ORDER BY tp.points DESC, p.name ASC`,
-			{ 1: id }
+			[id],
 		);
 
 		res.status(200).json({
@@ -74,7 +76,7 @@ router.get('/:id/leaderboard', (req: Request, res: Response) => {
 			participants: participantCount,
 			games_played: gamesPlayed,
 			total_games_required: totalRequiredGames,
-			leaderboard
+			leaderboard,
 		});
 	} catch (error) {
 		console.error('Error fetching leaderboard:', error);
